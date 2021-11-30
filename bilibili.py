@@ -5,7 +5,6 @@
 import requests
 import re
 import json
-import pprint  # 格式化输出模块
 import subprocess
 import os
 
