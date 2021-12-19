@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @ author:captain
 # @ time:2021/11/26 0026:10:40
+import pprint  # 格式化输出模块
 
 import requests
 import re
@@ -21,10 +22,10 @@ def send_request(url):
 
 
 def get_video_data(html_data):
-    '''解析视屏数据'''
+    '''视屏数据解析'''
     try:
         # 1.提取视频的标题
-        title = re.findall('<span class="tit">(.*?)</span>', html_data)[0]
+        title = re.findall('<h1 title="(.*?)" class="video-title">', html_data)[0]
 
         # 2.提取视频对应的json数据
         json_data = re.findall('<script>window\.__playinfo__=(.*?)</script>', html_data)[0]
@@ -44,8 +45,6 @@ def get_video_data(html_data):
         return False
 
 
-
-
 def check_path(audio_path,video_path):
     '''检查视频是否已经存在'''
     # 新视频合成后，对原来的音频和视频进行删除
@@ -59,37 +58,49 @@ def check_path(audio_path,video_path):
 
 # 合成视频参考：https://blog.csdn.net/m0_50027019/article/details/120379003
 def save_data(file_name,audio_url,video_url):
-    # 请求数据
-    print('正在请求音频数据...')
-    audio_data = send_request(audio_url).content
+    try:
+        # 请求数据
+        print('正在请求音频数据...')
+        audio_data = send_request(audio_url).content
 
-    print('正在请求视屏数据...')
-    video_data = send_request(video_url).content
+        print('正在请求视屏数据...')
+        video_data = send_request(video_url).content
 
-    # 音频、视频名称和路径
-    audio_name = file_name+'.mp3'
-    video_name = file_name
-    # file_path = 'C:\\Users\\Administrator\\Desktop\\spider\\05.多线程、进程、协程\\'
-    file_path = os.getcwd()+'\\'
-    audio_path = file_path + audio_name
-    video_path = file_path + video_name
-    all_path = file_path +file_name
+        # 音频、视频名称和路径
+        audio_name = file_name+'.mp3'
+        video_name = file_name
+        # 获取当前目录的路径
+        file_path = os.getcwd()+'\\'
+        # 音频路径
+        audio_path = file_path + audio_name
+        # 视频路径
+        video_path = file_path + video_name
+        # 合成视频路径
+        try:
+            all_path = file_path +file_name
+        except:
+            file_name = os.makedirs(file_name)
+            all_path = file_path + file_name
 
-    # 音频保存
-    with open(audio_name, mode='wb') as f:
-        f.write(audio_data)
-        print('正在保存音频数据...')
+            # 音频保存
+        with open(audio_name, mode='wb') as f:
+            f.write(audio_data)
+            print('正在保存音频数据...')
 
-    # 视频保存
-    with open(video_name, mode='wb') as f:
-        f.write(video_data)
-        print('正在保存视频数据...')
+        # 视频保存
+        with open(video_name, mode='wb') as f:
+            f.write(video_data)
+            print('正在保存视频数据...')
 
-     # 视频合成
-    command = 'ffmpeg.exe -i {} -i {} -acodec copy -vcodec copy {}.mp4'.format(audio_path, video_path, all_path)
-    os.system(command)
-    check_path(audio_path,video_path)
-    print('视频合并成功')
+         # 视频合成
+        command = 'ffmpeg.exe -i {} -i {} -acodec copy -vcodec copy {}.mp4'.format(audio_path, video_path, all_path)
+        os.system(command)
+        # 调用check_path()函数删除原音频和原视频
+        check_path(audio_path,video_path)
+        print('视频合并成功')
+    except:
+        print('该视频无法合并')
+        return False
 
 
 def user():
@@ -101,10 +112,6 @@ def user():
     print('比如：此链接https://www.bilibili.com/video/BV1Yh411o7Sz?p=6，只需要BV1Yh411o7Sz?p=6就行            *')
     print('                               ===输入0退出程序===                                                 *')
     print('*' * 100)
-    # url = 'https://www.bilibili.com/video/'
-    # user_url = input('请输入视频连接：')
-    # new_url = url+user_url
-    # return new_url
 
 
 # 函数调用模块
@@ -128,5 +135,7 @@ if __name__=='__main__':
         else:
             # 视频合成与保存
             save_data(video_data[0],video_data[1],video_data[2])
+
+
 
 
